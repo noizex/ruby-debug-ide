@@ -22,7 +22,8 @@ options = OpenStruct.new(
   'evaluation_timeout' => 10,
   'rm_protocol_extensions' => false,
   'catchpoint_deleted_event' => false,
-  'value_as_nested_element' => false
+  'value_as_nested_element' => false,
+  'child_process_ports' => nil,
 )
 
 opts = OptionParser.new do |opts|
@@ -35,8 +36,9 @@ EOB
   opts.separator ""
   opts.separator "Options:"
   opts.on("-h", "--host HOST", "Host name used for remote debugging") {|host| options.host = host}
-  opts.on("-p", "--port PORT", Integer, "Port used for remote debugging") {|port| options.port = port}  
-  opts.on("--dispatcher-port PORT", Integer, "Port used for multi-process debugging dispatcher") do |dp| 
+  opts.on("-p", "--port PORT", Integer, "Port used for remote debugging") {|port| options.port = port}
+  opts.on("--child-process-ports MIN-MAX", String, "Port range used for remote debugging of child (forked) processes") {|ports| options.child_process_ports = ports.strip.split('-').map(&:strip)}
+  opts.on("--dispatcher-port PORT", Integer, "Port used for multi-process debugging dispatcher") do |dp|
     options.dispatcher_port = dp
   end
   opts.on('--evaluation-timeout TIMEOUT', Integer,'evaluation timeout in seconds (default: 10)') do |timeout|
@@ -54,7 +56,7 @@ EOB
   opts.on("-I", "--include PATH", String, "Add PATH to $LOAD_PATH") do |path|
     $LOAD_PATH.unshift(path)
   end
-  
+
   opts.on("--keep-frame-binding", "Keep frame bindings") {options.frame_bind = true}
   opts.on("--disable-int-handler", "Disables interrupt signal handler") {options.int_handler = false}
   opts.on("--rubymine-protocol-extensions", "Enable all RubyMine-specific incompatible protocol extensions") do
@@ -94,13 +96,16 @@ if ARGV.empty?
   puts
   puts "Must specify a script to run"
   exit(1)
-end    
+end
 
 # save script name
 Debugger::PROG_SCRIPT = ARGV.shift
 
 if options.dispatcher_port != -1
   ENV['IDE_PROCESS_DISPATCHER'] = options.dispatcher_port.to_s
+  if options.child_process_ports
+    ENV['DEBUGGER_CHILD_PROCESS_PORTS'] = options.child_process_ports.join('-')
+  end
   if RUBY_VERSION < "1.9"
     $: << File.expand_path(File.dirname(__FILE__) + "/../lib/")
     require 'ruby-debug-ide/multiprocess'
@@ -108,7 +113,7 @@ if options.dispatcher_port != -1
     require_relative '../lib/ruby-debug-ide/multiprocess'
   end
 
-  ENV['DEBUGGER_STORED_RUBYLIB'] = ENV['RUBYLIB'] 
+  ENV['DEBUGGER_STORED_RUBYLIB'] = ENV['RUBYLIB']
   old_opts = ENV['RUBYOPT']
   ENV['RUBYOPT'] = "-r#{File.expand_path(File.dirname(__FILE__))}/../lib/ruby-debug-ide/multiprocess/starter"
   ENV['RUBYOPT'] += " #{old_opts}" if old_opts
@@ -119,7 +124,7 @@ if options.int_handler
   # install interruption handler
   trap('INT') { Debugger.interrupt_last }
 end
-  
+
 # set options
 Debugger.keep_frame_binding = options.frame_bind
 Debugger.tracing = options.tracing
@@ -128,4 +133,3 @@ Debugger.catchpoint_deleted_event = options.catchpoint_deleted_event || options.
 Debugger.value_as_nested_element = options.value_as_nested_element || options.rm_protocol_extensions
 
 Debugger.debug_program(options)
-
