@@ -24,7 +24,7 @@ options = OpenStruct.new(
   'catchpoint_deleted_event' => false,
   'value_as_nested_element' => false,
   'attach_mode' => false,
-  'cli_debug' => false
+  'cli_debug' => false,
   'child_process_ports' => nil,
 )
 
