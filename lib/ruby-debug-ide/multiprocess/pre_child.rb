@@ -17,7 +17,7 @@ module Debugger
             'frame_bind'  => false,
             'host'        => host,
             'load_mode'   => false,
-            'port'        => find_free_port(host),
+            'port'        => port,
             'stop'        => false,
             'tracing'     => false,
             'int_handler' => true,
