@@ -40,7 +40,7 @@ EOF
   spec.files = FILES
 
   spec.extensions << "ext/mkrf_conf.rb" unless ENV['NO_EXT']
-  spec.add_dependency("rake", ">= 0.8.1")
+  spec.add_runtime_dependency 'rake', '~> 0.8', '>= 0.8.1'  
 
   spec.required_ruby_version = '>= 1.8.2'
   spec.date = DateTime.now
