@@ -137,7 +137,6 @@ unless old_opts.include? starter
   ENV['RUBYOPT'] += " #{old_opts}" if old_opts != ''
 end
 ENV['DEBUGGER_CLI_DEBUG'] = Debugger.cli_debug.to_s
-end
 
 if options.int_handler
   # install interruption handler
